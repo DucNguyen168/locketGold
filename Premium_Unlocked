@@ -1,5 +1,5 @@
 #!name=dj - Locket Gold + AI Dev
-#!desc=Locket Gold 2026 + 224 AI Filter Giữ Form + AI Services (ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek). Dev build — iOS 18.7
+#!desc=Locket Gold 2026 + 224 AI Filter Giữ Form + AI Services + Encrypted DNS. Dev build — iOS 18.7
 #!author=dj
 #!homepage=https://module-ios.netlify.app
 #!howtouse=Shadowrocket
@@ -95,10 +95,24 @@ locket_pb_req = type=http-request, pattern=^https?:\/\/(us-central1-locket-4252a
 iTunes = type=http-response, pattern=^https?:\/\/buy\.itunes\.apple\.com\/verifyReceipt$, script-path=https://locket-bot.ngoanh20066.workers.dev/js/iTunes.js, requires-body=true, max-size=-1, timeout=60
 
 [Host]
+# Encrypted DNS — tránh ISP chặn/redirect/poisoning DNS
+# Cloudflare primary, Google fallback
+*.googleapis.com = server:https://1.1.1.1/dns-query
+*.cloudfunctions.net = server:https://1.1.1.1/dns-query
+*.locketcamera.com = server:https://1.1.1.1/dns-query
+*.revenuecat.com = server:https://1.1.1.1/dns-query
+*.openai.com = server:https://1.1.1.1/dns-query
+*.anthropic.com = server:https://1.1.1.1/dns-query
+*.claude.ai = server:https://1.1.1.1/dns-query
+
 # Cloud Functions IP gốc — nếu AI filter lỗi trên iOS 18.7, thử đổi thành server:system
 us-central1-locket-4252a.cloudfunctions.net = 180.93.124.173
 # Block Firebase Realtime push
 firebaseremoteconfigrealtime.googleapis.com = 0.0.0.0
+
+[General]
+# Encrypted DNS fallback — dùng khi Host section không cover
+dns-server = https://1.1.1.1/dns-query, https://8.8.8.8/dns-query
 
 [MITM]
 h2 = true
