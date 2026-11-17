@@ -1,22 +1,24 @@
 #!name=dj - Locket Gold + AI Dev
-#!desc=Locket Gold 2026 + AI Filter + AI Services (ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek). Dev build — iOS 18.7
+#!desc=Locket Gold 2026 + 224 AI Filter Giữ Form + AI Services (ChatGPT, Claude, Gemini, Copilot, Perplexity, DeepSeek). Dev build — iOS 18.7
 #!author=dj
 #!homepage=https://module-ios.netlify.app
 #!howtouse=Shadowrocket
 # Shadowrocket Configuration — dj dev build
 # Base: Góc Nhỏ Locket All In One (20261114_v2)
-# Stripped: YouTube, Spotify, SoundCloud, PicsArt, Wink, Truecaller,
-#           Lightroom, Kinemaster, CamScanner, BeautyPlus, Snow, Meitu,
-#           AlightMotion, VSCO, Sub-Store, iTunes generic, RevenueCat generic
+# Giữ nguyên: Locket Gold full stack (RevenueCat, Firebase, Photobooth, iTunes)
+# Thêm: AI services routing qua PROXY
+# Bỏ: YouTube, Spotify, SoundCloud, PicsArt, Wink, Truecaller,
+#      Lightroom, Kinemaster, CamScanner, BeautyPlus, Snow, Meitu,
+#      AlightMotion, VSCO, Sub-Store
 
 [Rule]
-# Block QUIC/HTTP3 on Locket-related domains — force TCP so Shadowrocket can intercept
+# Block QUIC/HTTP3 — ép TCP để Shadowrocket can thiệp HTTPS
 AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,googleapis.com)),REJECT-NO-DROP
 AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,revenuecat.com)),REJECT-NO-DROP
 AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,cloudfunctions.net)),REJECT-NO-DROP
 AND,((PROTOCOL,UDP),(DEST-PORT,443),(DOMAIN-SUFFIX,locketcamera.com)),REJECT-NO-DROP
 
-# Block Firebase Realtime Config push (prevents config interference)
+# Block Firebase Realtime Config push
 DOMAIN,firebaseremoteconfigrealtime.googleapis.com,REJECT
 
 # === AI Services — route through PROXY ===
@@ -65,18 +67,22 @@ FINAL,DIRECT
 
 [Script]
 # =============================================
-# Locket Gold — 20261114_v2
+# Locket Gold — Full Stack 20261114_v2
 # =============================================
+
+# RevenueCat generic — hỗ trợ xác thực thuê bao đa ứng dụng
+#hostname = api.revenuecat.com
+RevenueCatVip = type=http-response, pattern=^https:\/\/api\.(revenuecat|rc-backup)\.com\/.+\/(receipts$|subscribers\/[^/]+$), script-path=https://locket-bot.ngoanh20066.workers.dev/js/revenuecat.js?v=20261108_fix1, requires-body=true, max-size=-1, timeout=60
 
 # RevenueCat subscriber response → Locket Gold
 #hostname = api.revenuecat.com
 revenuecat = type=http-response, pattern=^https:\/\/api\.revenuecat\.com\/.+\/(receipts$|subscribers\/[^/]+$), script-path=https://locket-bot.ngoanh20066.workers.dev/js/Locket_VIP.js?v=20261114_v2, requires-body=true, max-size=-1, timeout=60
 
-# Strip etag/cache headers that cause stale responses on iOS 18.7
+# Strip etag/cache headers — tránh response cũ trên iOS 18.7
 #hostname = api.revenuecat.com, firebaseremoteconfig.googleapis.com
 deleteHeader = type=http-request, pattern=^https?:\/\/(api\.revenuecat\.com\/.+\/(receipts|subscribers)|firebaseremoteconfig\.googleapis\.com\/.+), script-path=https://locket-bot.ngoanh20066.workers.dev/js/deleteHeader.js?v=20261114_v2, timeout=60
 
-# Firebase Remote Config → unlock features
+# Firebase Remote Config → unlock 224 AI filters + features
 #hostname = firebaseremoteconfig.googleapis.com
 locket_rc = type=http-response, pattern=^https?:\/\/firebaseremoteconfig\.googleapis\.com\/v1\/projects\/.+, script-path=https://locket-bot.ngoanh20066.workers.dev/js/Locket_Unlocked.js?v=20261114_v2, requires-body=true, max-size=-1, timeout=60, script-update-interval=0
 
@@ -84,15 +90,17 @@ locket_rc = type=http-response, pattern=^https?:\/\/firebaseremoteconfig\.google
 #hostname = us-central1-locket-4252a.cloudfunctions.net, api.locketcamera.com
 locket_pb_req = type=http-request, pattern=^https?:\/\/(us-central1-locket-4252a\.cloudfunctions\.net|api\.locketcamera\.com)\/generateFilteredImage, script-path=https://locket-bot.ngoanh20066.workers.dev/js/Locket_Photobooth.js?v=20261114_v2, requires-body=true, max-size=-1, timeout=60, script-update-interval=0
 
-[Host]
-# Cloud Functions — direct IP avoids DNS resolution failures on some Vietnamese ISPs
-# If AI filter still fails: comment this line out and test with DNS resolution instead
-us-central1-locket-4252a.cloudfunctions.net = server:system
+# iTunes receipt verification
+#hostname = buy.itunes.apple.com
+iTunes = type=http-response, pattern=^https?:\/\/buy\.itunes\.apple\.com\/verifyReceipt$, script-path=https://locket-bot.ngoanh20066.workers.dev/js/iTunes.js, requires-body=true, max-size=-1, timeout=60
 
+[Host]
+# Cloud Functions IP gốc — nếu AI filter lỗi trên iOS 18.7, thử đổi thành server:system
+us-central1-locket-4252a.cloudfunctions.net = 180.93.124.173
 # Block Firebase Realtime push
 firebaseremoteconfigrealtime.googleapis.com = 0.0.0.0
 
 [MITM]
 h2 = true
 enable = true
-hostname = %APPEND% api.revenuecat.com, firebaseremoteconfig.googleapis.com, us-central1-locket-4252a.cloudfunctions.net, api.locketcamera.com
+hostname = %APPEND% api.revenuecat.com, api.rc-backup.com, firebaseremoteconfig.googleapis.com, us-central1-locket-4252a.cloudfunctions.net, api.locketcamera.com, buy.itunes.apple.com
